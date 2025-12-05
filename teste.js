@@ -1,37 +1,29 @@
-function hitPlayer(player, fireball) {
+function endGame(scene) {
 
-    if (playerInvulnerable) return;
-    if (!fireball.active || !fireball.body.enable) return;
+    // Pausa toda a física (para tudo: inimigo, player, projéteis)
+    scene.physics.pause();
 
-    // Impede o mesmo projétil de causar múltiplos hits
-    if (fireball.hasHit) return;  
-    fireball.hasHit = true;
+    // Cancela o timer de disparo do inimigo
+    if (scene.enemyShootTimer) {
+        scene.enemyShootTimer.remove(false);
+    }
 
-    // Agora sim desativa só o projétil que bateu
-    fireball.disableBody(true, true);
-    fireball.setActive(false);
-    fireball.setVisible(false);
+    // Zera velocidade de tudo manualmente (caso algo já esteja em movimento)
+    if (player && player.body) {
+        player.setVelocity(0, 0);
+    }
 
-    console.log("Player atingido por fireball.");
+    if (enemy && enemy.body) {
+        enemy.setVelocity(0, 0);
+    }
 
-    playerLives = Math.max(0, playerLives - 1);
-    score -= 50;
-    scoreText.setText("Pontuação: " + score);
-    livesText.setText("Player Lives: " + playerLives);
-
-    // Invulnerabilidade do jogador
-    playerInvulnerable = true;
-    player.setAlpha(0.5);
-
-    this.time.delayedCall(1000, () => {
-        playerInvulnerable = false;
-        player.setAlpha(1);
+    fireballs.getChildren().forEach(fb => {
+        if (fb.body) fb.setVelocity(0, 0);
     });
 
-    // Game over
-    if (playerLives <= 0) {
-        victoryText.setDepth(9999)
-        victoryText.setText("Você perdeu!");
-        endGame(this);
-    }
+    // Evita input do jogador após fim
+    scene.input.keyboard.enabled = false;
+
+    // Efeito visual opcional de congelamento
+    scene.cameras.main.setAlpha(0.9);
 }
